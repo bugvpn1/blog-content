@@ -1,8 +1,0 @@
-{
-  "slug": "20260606041000-free-vpn-test-start-2c7e18",
-  "title": "绿茶 Free VPN 测试文章一",
-  "excerpt": "新站点 lvchafreevpn.com 的第一篇测试博客，用于验证 manifest 和详情页读取。",
-  "publishedAt": "2026-06-06T04:10:00.000Z",
-  "updatedAt": "2026-06-06T04:10:00.000Z",
-  "contentHtml": "<h2>测试站点内容</h2><p>这是一篇给 lvchafreevpn.com 准备的测试文章。内容比较简单，主要用于确认新站点目录、manifest 文件和 posts 文件是否能被读取。</p><h2>Free VPN 场景</h2><p>示例正文可以描述免费 VPN 的基础使用，例如下载客户端、选择节点、打开网页并观察连接状态。这里不做正式产品说明。</p><h2>结尾</h2><p>本文为测试数据，方便开发环境验证新域名内容。</p>"
-}
