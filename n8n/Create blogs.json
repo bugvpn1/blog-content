@@ -1,0 +1,623 @@
+{
+  "name": "Create blogs",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "# Multi-Site VPN Content Engine\n\nWeekly Monday batch generation for portfolio domains.\n- 10 domains per batch\n- 60 second pause after each batch keeps Jina Reader below 20 RPM without an API key\n- Live competitor text via Jina Reader\n- Dynamic brand/persona prompt\n- Clean evergreen SEO slugs\n- Creates post JSON files in GitHub instead of appending rows",
+        "height": 360,
+        "width": 720
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1800,
+        -320
+      ],
+      "typeVersion": 1,
+      "id": "d599e2d7-ec20-4466-be0e-e3d4edadc49e",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "create",
+        "owner": {
+          "__rl": true,
+          "value": "bugvpn1",
+          "mode": "list",
+          "cachedResultName": "bugvpn1",
+          "cachedResultUrl": "https://github.com/bugvpn1"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "cloudnode-index",
+          "mode": "list",
+          "cachedResultName": "cloudnode-index",
+          "cachedResultUrl": "https://github.com/bugvpn1/cloudnode-index"
+        },
+        "filePath": "={{ $json.githubFilePath }}",
+        "fileContent": "={{ $json.githubFileContent }}",
+        "commitMessage": "={{ $json.githubCommitMessage }}",
+        "branch": "main"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        1380,
+        112
+      ],
+      "id": "dcabbfc5-4558-4e9a-b74e-03710b98cb93",
+      "name": "Create Blog File in GitHub",
+      "credentials": {
+        "githubApi": {
+          "id": "gFyfwUMsWGCdVtRK",
+          "name": "GitHub account"
+        }
+      },
+      "webhookId": "8d428c6b-74c2-4b26-a3ba-841976474b65"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.4",
+          "mode": "list",
+          "cachedResultName": "gpt-5.4"
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0.9,
+          "responseFormat": "text"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        480,
+        304
+      ],
+      "id": "fa2c9463-5882-4f0a-949e-9d94b8142814",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "CInkHwqc8N6ckM83",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "keyword",
+              "renameField": true,
+              "outputFieldName": "keywords"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -1140,
+        112
+      ],
+      "id": "8b81441c-ff6f-46bb-9737-83cebcb6e69d",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "function getNodeItems(name) {\n  try {\n    return $(name).all();\n  } catch (error) {\n    try {\n      return $items(name);\n    } catch (fallbackError) {\n      return [];\n    }\n  }\n}\n\nfunction normalizeWebsite(value) {\n  const raw = String(value || '').trim();\n  if (!raw) return '';\n  return /^https?:\\/\\//i.test(raw) ? raw.replace(/\\/$/, '') : 'https://' + raw.replace(/\\/$/, '');\n}\n\nconst providerItems = $input.all();\nif (!providerItems.length) {\n  throw new Error('No VPN providers were returned from the provider sheet.');\n}\n\nconst domainItems = getNodeItems('Define Portfolio Domains & Personas');\nif (!domainItems.length) {\n  throw new Error('No portfolio domain items are available from Define Portfolio Domains & Personas.');\n}\n\nconst aggregateItems = getNodeItems('Aggregate');\nconst keywords = Array.isArray(aggregateItems[0]?.json?.keywords) ? aggregateItems[0].json.keywords : [];\nconst weekSeed = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000));\n\nreturn domainItems.map((domainItem, localIndex) => {\n  const site = domainItem.json;\n  const providerOffset = (weekSeed + Number(site.global_index || localIndex)) % providerItems.length;\n  const provider = providerItems[providerOffset]?.json || {};\n  const providerName = provider.provider || provider.name || provider.title || provider.company || 'Unknown VPN Provider';\n  const website = normalizeWebsite(provider.website || provider.url || provider.domain || provider.link);\n\n  return {\n    json: {\n      ...site,\n      provider: providerName,\n      competitor_name: providerName,\n      website,\n      competitor_website: website,\n      competitor_rotation_index: providerOffset,\n      keywords,\n      coordinated_primary_keyword: String(providerName).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-alternative',\n      keyword_angle: site.assigned_persona\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -700,
+        112
+      ],
+      "id": "68fac320-c2ac-4154-92a1-c50e91d2c7e2",
+      "name": "Assign Competitor Per Domain"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1umrgybWGNIKXEqWyr-GzoWpYvVxNwqsKKEucA_w4gvY",
+          "mode": "list",
+          "cachedResultName": "VPN Providers",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1umrgybWGNIKXEqWyr-GzoWpYvVxNwqsKKEucA_w4gvY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "工作表1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1umrgybWGNIKXEqWyr-GzoWpYvVxNwqsKKEucA_w4gvY/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -920,
+        112
+      ],
+      "id": "9546e874-c5e9-4d7b-bce1-9d1464e2dd09",
+      "name": "Get all VPN providers1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "o4tWFB6UDVoT4bjA",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You act as the Senior SEO Content Lead for a multi-site VPN website portfolio. Your goal is to write one high-ranking, authoritative blog post in Simplified Chinese for the current incoming website item.\n\nCurrent portfolio site:\n- Domain: {{ $json.domain }}\n- English brand name: {{ $json.brand_name_en }}\n- Chinese brand name: {{ $json.brand_name_zh }}\n- Distinct site persona/angle: {{ $json.assigned_persona }}\n\nCompetitor target for this item:\n- Name: {{ $json.provider }}\n- Website: {{ $json.website }}\n\nLive scraped competitor specs from Jina Reader extraction:\n- Pricing: {{ $json.pricing }}\n- Protocols: {{ $json.protocols }}\n- Server count or locations: {{ $json.server_count }}\n\nCreate 1 complete SEO-optimized blog post in Chinese based on the provided keywords and this site's assigned persona.\n\n### Anti-Hallucination Rules\n- Use the live scraped competitor specs above as the source of truth for pricing, protocols, and server/location claims.\n- If a value is Not disclosed or unclear, say the public page did not clearly disclose it. Do not invent numbers, prices, protocols, discounts, or server counts.\n- Keep the comparison fair, objective, and useful.\n\n### Portfolio Isolation Rules\n- The article must strongly reflect this assigned persona: {{ $json.assigned_persona }}\n- Do not write a generic competitor comparison that could be reused unchanged on every portfolio site.\n- Coordinate the angle with the assigned persona and keywords so this site does not target the same exact competitor angle as another site in the same weekly batch.\n\n### Brand Identity\n- Always use the current English brand name exactly as: {{ $json.brand_name_en }}\n- Always use the current Chinese brand name exactly as: {{ $json.brand_name_zh }}\n- Website: https://{{ $json.domain }}/\n- Positioning: a modern, high-speed VPN/proxy or airport-style access option for users who need stable cross-border browsing.\n\n### SEO & Content Strategy\n- Primary Keyword Focus: {{ $json.provider }} alternative, Best VPN for China, {{ $json.brand_name_en }} review, Scientific Internet.\n- Search Intent: users comparing {{ $json.provider }} with alternatives because of price, speed, stability, compatibility, protocol support, streaming access, or China connectivity concerns.\n- Tone: professional, objective, persuasive, and specific to the assigned persona.\n\n### Slug Rules\nReturn a slug field for the public URL. The slug is mandatory.\n- Must contain the primary keyword phrase, such as competitor-name-alternative.\n- Use lowercase letters only.\n- Separate words with hyphens only. No underscores, spaces, plus signs, or symbols.\n- Strip stop words such as the, a, for, to, in, and unless they are required for meaning.\n- Keep it short: 2 to 5 words maximum.\n- Do not include years, dates, timestamps, list counts, random hashes, or other numbers.\n- Use URL-safe ASCII alphanumeric characters and hyphens only.\n\n### Formatting & Structure\n- Title field: Generate a title in the format Chinese Title | English Title. Use a vertical bar to separate the two parts. Do not use double quotes in the title string.\n- Content field: Plain text only. Do not use markdown symbols like ##, **, __, or []().\n- Do not use a table. Use concise paragraphs and simple text bullets if useful.\n- Clean headers only. Do not add bracketed labels or extra descriptions inside headers.\n\n### Required Content Flow\nIntroduction: Start directly with the current VPN/proxy access situation in China. Explicitly mention {{ $json.provider }} and {{ $json.website }}, and explain why users may look for alternatives.\n\n1. 价格与性价比分析\nAnalyze cost and value using the extracted pricing data. If pricing is unclear, state that clearly and compare how users should evaluate plan value.\n\n2. 流媒体解锁测试\nCover Netflix, Disney+, YouTube, Twitch, Amazon Prime Video, and region-sensitive access. Tie this section to the assigned persona where natural.\n\n3. 速度与技术分析\nDiscuss speed, protocols, line quality, stability, and why IEPL/IPLC or airport-style lines can differ from traditional VPN routes. Use extracted protocol/server data only when available.\n\n核心对比总结\nProvide a clear text list comparing {{ $json.provider }} and {{ $json.brand_name_en }} through the assigned persona.\n\n最终评价\nGive the final verdict for users matching this search intent and persona.\n\nCTA: The final line must be exactly:\n立即体验 {{ $json.brand_name_zh }} {{ $json.brand_name_en }} - https://{{ $json.domain }}/\n\n### Output Format\nReturn ONLY the raw JSON string. Do not enclose the output in markdown code blocks.\n\n{\"posts\":[{\"slug\":\"competitor-alternative\",\"title\":\"Chinese Title | English Title\",\"content\":\"Introduction text here...\\n\\n1. 价格与性价比分析\\nContent here...\"}]}\n\n### Input Keywords\n{{ ($json.keywords || []).join(', ') }}",
+        "options": {
+          "systemMessage": "=Use only the provided live extraction context and workflow input fields for factual competitor claims. Todays date is {{ $now }}",
+          "maxIterations": 5
+        }
+      },
+      "id": "b76e20fd-e84f-4f7d-9c20-8ddaafcfa483",
+      "name": "Dynamic Multi-Brand Content Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        480,
+        112
+      ],
+      "retryOnFail": true,
+      "typeVersion": 1.7
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 9,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1800,
+        112
+      ],
+      "id": "6be8163c-5e3a-4e5d-9783-476d8b3dbc1c",
+      "name": "Schedule Trigger1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1sJMrg1IgZXbPokBwuNtNP7xQahXookWfdapy099FUfQ",
+          "mode": "list",
+          "cachedResultName": "Google Keywords",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sJMrg1IgZXbPokBwuNtNP7xQahXookWfdapy099FUfQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "工作表1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sJMrg1IgZXbPokBwuNtNP7xQahXookWfdapy099FUfQ/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "status",
+              "lookupValue": "approved"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1360,
+        112
+      ],
+      "id": "34b00216-9da7-4ae5-b74b-025ed44f71af",
+      "name": "Get google keywords to generate post1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "o4tWFB6UDVoT4bjA",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function getNodeItems(name) {\n  try {\n    return $(name).all();\n  } catch (error) {\n    try {\n      return $items(name);\n    } catch (fallbackError) {\n      return [];\n    }\n  }\n}\n\nfunction cleanJsonText(value) {\n  if (value && typeof value === 'object') return value;\n  return String(value || '')\n    .replace(/^\\s*```json\\s*/i, '')\n    .replace(/^\\s*```\\s*/i, '')\n    .replace(/\\s*```\\s*$/i, '')\n    .trim();\n}\n\nfunction parseJsonPayload(value) {\n  if (value && typeof value === 'object') return value;\n  const cleaned = cleanJsonText(value);\n  if (!cleaned) return {};\n  try {\n    return JSON.parse(cleaned);\n  } catch (error) {\n    const objectMatch = cleaned.match(/\\{[\\s\\S]*\\}/);\n    if (objectMatch) {\n      try {\n        return JSON.parse(objectMatch[0]);\n      } catch (nestedError) {}\n    }\n    return {};\n  }\n}\n\nconst contextItems = getNodeItems('Loop Over Domain Batches');\n\nreturn $input.all().map((item, index) => {\n  const context = contextItems[index]?.json || {};\n  const raw = item.json.output ?? item.json.text ?? item.json.data ?? item.json;\n  const specs = parseJsonPayload(raw);\n\n  return {\n    json: {\n      ...context,\n      pricing: specs.pricing || 'Not disclosed on the scraped public page',\n      protocols: specs.protocols || 'Not disclosed on the scraped public page',\n      server_count: specs.server_count || 'Not disclosed on the scraped public page',\n      competitor_specs: specs\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        112
+      ],
+      "id": "e4812a65-b9ff-4f12-b7cd-957109459a4e",
+      "name": "Prepare Article Context"
+    },
+    {
+      "parameters": {
+        "batchSize": 10,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -480,
+        112
+      ],
+      "id": "e5ae23a7-2068-4974-a364-324887db9bdf",
+      "name": "Loop Over Domain Batches"
+    },
+    {
+      "parameters": {
+        "jsCode": "function getNodeItems(name) {\n  try {\n    return $(name).all();\n  } catch (error) {\n    try {\n      return $items(name);\n    } catch (fallbackError) {\n      return [];\n    }\n  }\n}\n\nfunction cleanJsonText(value) {\n  if (value && typeof value === 'object') return value;\n  return String(value || '')\n    .replace(/^\\s*```json\\s*/i, '')\n    .replace(/^\\s*```\\s*/i, '')\n    .replace(/\\s*```\\s*$/i, '')\n    .trim();\n}\n\nfunction parseJsonPayload(value) {\n  if (value && typeof value === 'object') return value;\n  const cleaned = cleanJsonText(value);\n  if (!cleaned) return { posts: [] };\n  try {\n    return JSON.parse(cleaned);\n  } catch (error) {\n    const objectMatch = cleaned.match(/\\{[\\s\\S]*\\}/);\n    if (objectMatch) {\n      try {\n        return JSON.parse(objectMatch[0]);\n      } catch (nestedError) {}\n    }\n    throw new Error('Dynamic content agent did not return valid JSON: ' + cleaned.slice(0, 500));\n  }\n}\n\nconst contextItems = getNodeItems('Prepare Article Context');\n\nreturn $input.all().map((item, index) => {\n  const context = contextItems[index]?.json || {};\n  const payload = parseJsonPayload(item.json.output ?? item.json.text ?? item.json.data ?? item.json);\n  const posts = Array.isArray(payload.posts) ? payload.posts : [];\n\n  return {\n    json: {\n      output: {\n        posts: posts.map((post) => ({\n          ...post,\n          domain: context.domain,\n          brand_name_zh: context.brand_name_zh,\n          brand_name_en: context.brand_name_en,\n          assigned_persona: context.assigned_persona,\n          provider: context.provider,\n          competitor_name: context.competitor_name,\n          website: context.website,\n          competitor_website: context.competitor_website,\n          pricing: context.pricing,\n          protocols: context.protocols,\n          server_count: context.server_count,\n          keywords: context.keywords || [],\n          coordinated_primary_keyword: context.coordinated_primary_keyword,\n          batch_index: context.batch_index,\n          batch_position: context.batch_position\n        }))\n      }\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        112
+      ],
+      "id": "ee746009-6a60-4192-9485-88687505c597",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output.posts",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        940,
+        112
+      ],
+      "id": "fa721cb9-af8d-4075-b7a5-c4e727aca7a5",
+      "name": "Split Out1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const portfolio = [\n  {\n    \"source\": \"onsu\",\n    \"domain\": \"onsuvpn.com\",\n    \"brand_name_zh\": \"永续云机场\",\n    \"brand_name_en\": \"ONsuCloud\",\n    \"assigned_persona\": \"Focus entirely on cross-platform compatibility, iOS and Android setup, and mobile app optimization.\",\n    \"batch_index\": 1,\n    \"batch_position\": 1,\n    \"batch_size\": 10,\n    \"global_index\": 0,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"lvcha\",\n    \"domain\": \"lvchafreevpn.com\",\n    \"brand_name_zh\": \"绿茶免费VPN\",\n    \"brand_name_en\": \"Lvcha Free VPN\",\n    \"assigned_persona\": \"Focus heavily on secure protocols such as VLESS, Shadowsocks, Trojan, and premium IEPL/IPLC network lines.\",\n    \"batch_index\": 1,\n    \"batch_position\": 2,\n    \"batch_size\": 10,\n    \"global_index\": 1,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"ahaspeed\",\n    \"domain\": \"ahaspeedfreevpn.com\",\n    \"brand_name_zh\": \"AhaSpeed 免费VPN\",\n    \"brand_name_en\": \"AhaSpeed Free VPN\",\n    \"assigned_persona\": \"Emphasize extreme price-to-performance ratio, transparent plan limits, and budget-friendly long-term use.\",\n    \"batch_index\": 1,\n    \"batch_position\": 3,\n    \"batch_size\": 10,\n    \"global_index\": 2,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"nord\",\n    \"domain\": \"nordfreejsq.com\",\n    \"brand_name_zh\": \"Nord 免费加速器\",\n    \"brand_name_en\": \"Nord Free JSQ\",\n    \"assigned_persona\": \"Prioritize streaming unlock reliability for Netflix, Disney+, YouTube, Twitch, Amazon Prime Video, and regional media libraries.\",\n    \"batch_index\": 1,\n    \"batch_position\": 4,\n    \"batch_size\": 10,\n    \"global_index\": 3,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"express\",\n    \"domain\": \"expressfreejsq.com\",\n    \"brand_name_zh\": \"Express 免费加速器\",\n    \"brand_name_en\": \"Express Free JSQ\",\n    \"assigned_persona\": \"Prioritize low latency for gaming, voice calls, video meetings, and real-time collaboration workflows.\",\n    \"batch_index\": 1,\n    \"batch_position\": 5,\n    \"batch_size\": 10,\n    \"global_index\": 4,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"surf-shark\",\n    \"domain\": \"surf-sharkfreevpn.com\",\n    \"brand_name_zh\": \"Surfshark 免费VPN\",\n    \"brand_name_en\": \"Surfshark Free VPN\",\n    \"assigned_persona\": \"Focus on privacy boundaries, no-log claims, account security, DNS leak awareness, and safe public Wi-Fi use.\",\n    \"batch_index\": 1,\n    \"batch_position\": 6,\n    \"batch_size\": 10,\n    \"global_index\": 5,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"astrill\",\n    \"domain\": \"astrillfreevpn.com\",\n    \"brand_name_zh\": \"Astrill 免费VPN\",\n    \"brand_name_en\": \"Astrill Free VPN\",\n    \"assigned_persona\": \"Focus on router deployment, home network stability, smart TV access, and whole-house device coverage.\",\n    \"batch_index\": 1,\n    \"batch_position\": 7,\n    \"batch_size\": 10,\n    \"global_index\": 6,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"haita\",\n    \"domain\": \"haitafreevpn.com\",\n    \"brand_name_zh\": \"Haita 免费VPN\",\n    \"brand_name_en\": \"Haita Free VPN\",\n    \"assigned_persona\": \"Focus on travel, cross-border work, hotel and airport Wi-Fi, and backup connection planning.\",\n    \"batch_index\": 1,\n    \"batch_position\": 8,\n    \"batch_size\": 10,\n    \"global_index\": 7,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"baokemeng\",\n    \"domain\": \"baokemengfreevpn.com\",\n    \"brand_name_zh\": \"Baokemeng 免费VPN\",\n    \"brand_name_en\": \"Baokemeng Free VPN\",\n    \"assigned_persona\": \"Focus on AI tools, developer workflows, code repositories, documentation sites, and research productivity.\",\n    \"batch_index\": 1,\n    \"batch_position\": 9,\n    \"batch_size\": 10,\n    \"global_index\": 8,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"ikuuu\",\n    \"domain\": \"ikuuufreevpn.com\",\n    \"brand_name_zh\": \"Ikuuu 免费VPN\",\n    \"brand_name_en\": \"Ikuuu Free VPN\",\n    \"assigned_persona\": \"Focus on beginner-friendly setup, simple troubleshooting, fast onboarding, and clear non-technical explanations.\",\n    \"batch_index\": 1,\n    \"batch_position\": 10,\n    \"batch_size\": 10,\n    \"global_index\": 9,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"kuailian\",\n    \"domain\": \"kuailianfreevpn.com\",\n    \"brand_name_zh\": \"Kuailian 免费VPN\",\n    \"brand_name_en\": \"Kuailian Free VPN\",\n    \"assigned_persona\": \"Focus entirely on cross-platform compatibility, iOS and Android setup, and mobile app optimization.\",\n    \"batch_index\": 2,\n    \"batch_position\": 1,\n    \"batch_size\": 10,\n    \"global_index\": 10,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"superman\",\n    \"domain\": \"supermanfreevpn.com\",\n    \"brand_name_zh\": \"Superman 免费VPN\",\n    \"brand_name_en\": \"Superman Free VPN\",\n    \"assigned_persona\": \"Focus heavily on secure protocols such as VLESS, Shadowsocks, Trojan, and premium IEPL/IPLC network lines.\",\n    \"batch_index\": 2,\n    \"batch_position\": 2,\n    \"batch_size\": 10,\n    \"global_index\": 11,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"clash\",\n    \"domain\": \"clashfreevpn.com\",\n    \"brand_name_zh\": \"Clash 免费VPN\",\n    \"brand_name_en\": \"Clash Free VPN\",\n    \"assigned_persona\": \"Emphasize extreme price-to-performance ratio, transparent plan limits, and budget-friendly long-term use.\",\n    \"batch_index\": 2,\n    \"batch_position\": 3,\n    \"batch_size\": 10,\n    \"global_index\": 12,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"mojie\",\n    \"domain\": \"mojiefreevpn.com\",\n    \"brand_name_zh\": \"Mojie 免费VPN\",\n    \"brand_name_en\": \"Mojie Free VPN\",\n    \"assigned_persona\": \"Prioritize streaming unlock reliability for Netflix, Disney+, YouTube, Twitch, Amazon Prime Video, and regional media libraries.\",\n    \"batch_index\": 2,\n    \"batch_position\": 4,\n    \"batch_size\": 10,\n    \"global_index\": 13,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"skyline\",\n    \"domain\": \"skylinefreevpn.com\",\n    \"brand_name_zh\": \"Skyline 免费VPN\",\n    \"brand_name_en\": \"Skyline Free VPN\",\n    \"assigned_persona\": \"Prioritize low latency for gaming, voice calls, video meetings, and real-time collaboration workflows.\",\n    \"batch_index\": 2,\n    \"batch_position\": 5,\n    \"batch_size\": 10,\n    \"global_index\": 14,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"meihua\",\n    \"domain\": \"meihuafreevpn.com\",\n    \"brand_name_zh\": \"Meihua 免费VPN\",\n    \"brand_name_en\": \"Meihua Free VPN\",\n    \"assigned_persona\": \"Focus on privacy boundaries, no-log claims, account security, DNS leak awareness, and safe public Wi-Fi use.\",\n    \"batch_index\": 2,\n    \"batch_position\": 6,\n    \"batch_size\": 10,\n    \"global_index\": 15,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"xievip\",\n    \"domain\": \"xievipfreevpn.com\",\n    \"brand_name_zh\": \"Xievip 免费VPN\",\n    \"brand_name_en\": \"Xievip Free VPN\",\n    \"assigned_persona\": \"Focus on router deployment, home network stability, smart TV access, and whole-house device coverage.\",\n    \"batch_index\": 2,\n    \"batch_position\": 7,\n    \"batch_size\": 10,\n    \"global_index\": 16,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"shadowrocket\",\n    \"domain\": \"shadowrocketfreevpn.com\",\n    \"brand_name_zh\": \"Shadowrocket 免费VPN\",\n    \"brand_name_en\": \"Shadowrocket Free VPN\",\n    \"assigned_persona\": \"Focus on travel, cross-border work, hotel and airport Wi-Fi, and backup connection planning.\",\n    \"batch_index\": 2,\n    \"batch_position\": 8,\n    \"batch_size\": 10,\n    \"global_index\": 17,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"veee\",\n    \"domain\": \"veeefreevpn.com\",\n    \"brand_name_zh\": \"Veee 免费VPN\",\n    \"brand_name_en\": \"Veee Free VPN\",\n    \"assigned_persona\": \"Focus on AI tools, developer workflows, code repositories, documentation sites, and research productivity.\",\n    \"batch_index\": 2,\n    \"batch_position\": 9,\n    \"batch_size\": 10,\n    \"global_index\": 18,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"gwshudong\",\n    \"domain\": \"gwshudongfreevpn.com\",\n    \"brand_name_zh\": \"Gwshudong 免费VPN\",\n    \"brand_name_en\": \"Gwshudong Free VPN\",\n    \"assigned_persona\": \"Focus on beginner-friendly setup, simple troubleshooting, fast onboarding, and clear non-technical explanations.\",\n    \"batch_index\": 2,\n    \"batch_position\": 10,\n    \"batch_size\": 10,\n    \"global_index\": 19,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"liuliangguang\",\n    \"domain\": \"liuliangguangfreevpn.com\",\n    \"brand_name_zh\": \"Liuliangguang 免费VPN\",\n    \"brand_name_en\": \"Liuliangguang Free VPN\",\n    \"assigned_persona\": \"Focus entirely on cross-platform compatibility, iOS and Android setup, and mobile app optimization.\",\n    \"batch_index\": 3,\n    \"batch_position\": 1,\n    \"batch_size\": 10,\n    \"global_index\": 20,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"xiaoxiao\",\n    \"domain\": \"xiaoxiaofreevpn.com\",\n    \"brand_name_zh\": \"Xiaoxiao 免费VPN\",\n    \"brand_name_en\": \"Xiaoxiao Free VPN\",\n    \"assigned_persona\": \"Focus heavily on secure protocols such as VLESS, Shadowsocks, Trojan, and premium IEPL/IPLC network lines.\",\n    \"batch_index\": 3,\n    \"batch_position\": 2,\n    \"batch_size\": 10,\n    \"global_index\": 21,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"nexitally\",\n    \"domain\": \"nexitallyfreevpn.com\",\n    \"brand_name_zh\": \"Nexitally 免费VPN\",\n    \"brand_name_en\": \"Nexitally Free VPN\",\n    \"assigned_persona\": \"Emphasize extreme price-to-performance ratio, transparent plan limits, and budget-friendly long-term use.\",\n    \"batch_index\": 3,\n    \"batch_position\": 3,\n    \"batch_size\": 10,\n    \"global_index\": 22,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"sanmao\",\n    \"domain\": \"sanmaofreevpn.com\",\n    \"brand_name_zh\": \"Sanmao 免费VPN\",\n    \"brand_name_en\": \"Sanmao Free VPN\",\n    \"assigned_persona\": \"Prioritize streaming unlock reliability for Netflix, Disney+, YouTube, Twitch, Amazon Prime Video, and regional media libraries.\",\n    \"batch_index\": 3,\n    \"batch_position\": 4,\n    \"batch_size\": 10,\n    \"global_index\": 23,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"qingyunti\",\n    \"domain\": \"qingyuntifreevpn.com\",\n    \"brand_name_zh\": \"Qingyunti 免费VPN\",\n    \"brand_name_en\": \"Qingyunti Free VPN\",\n    \"assigned_persona\": \"Prioritize low latency for gaming, voice calls, video meetings, and real-time collaboration workflows.\",\n    \"batch_index\": 3,\n    \"batch_position\": 5,\n    \"batch_size\": 10,\n    \"global_index\": 24,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"flyingbird\",\n    \"domain\": \"flyingbirdfreevpn.com\",\n    \"brand_name_zh\": \"Flyingbird 免费VPN\",\n    \"brand_name_en\": \"Flyingbird Free VPN\",\n    \"assigned_persona\": \"Focus on privacy boundaries, no-log claims, account security, DNS leak awareness, and safe public Wi-Fi use.\",\n    \"batch_index\": 3,\n    \"batch_position\": 6,\n    \"batch_size\": 10,\n    \"global_index\": 25,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"flowercloud\",\n    \"domain\": \"flowercloudfreevpn.com\",\n    \"brand_name_zh\": \"Flowercloud 免费VPN\",\n    \"brand_name_en\": \"Flowercloud Free VPN\",\n    \"assigned_persona\": \"Focus on router deployment, home network stability, smart TV access, and whole-house device coverage.\",\n    \"batch_index\": 3,\n    \"batch_position\": 7,\n    \"batch_size\": 10,\n    \"global_index\": 26,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"bygcloud\",\n    \"domain\": \"bygcloudfreevpn.com\",\n    \"brand_name_zh\": \"Bygcloud 免费VPN\",\n    \"brand_name_en\": \"Bygcloud Free VPN\",\n    \"assigned_persona\": \"Focus on travel, cross-border work, hotel and airport Wi-Fi, and backup connection planning.\",\n    \"batch_index\": 3,\n    \"batch_position\": 8,\n    \"batch_size\": 10,\n    \"global_index\": 27,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"1cny\",\n    \"domain\": \"1cnyfreevpn.com\",\n    \"brand_name_zh\": \"1cny 免费VPN\",\n    \"brand_name_en\": \"1cny Free VPN\",\n    \"assigned_persona\": \"Focus on AI tools, developer workflows, code repositories, documentation sites, and research productivity.\",\n    \"batch_index\": 3,\n    \"batch_position\": 9,\n    \"batch_size\": 10,\n    \"global_index\": 28,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"kuromis\",\n    \"domain\": \"kuromisfreevpn.com\",\n    \"brand_name_zh\": \"Kuromis 免费VPN\",\n    \"brand_name_en\": \"Kuromis Free VPN\",\n    \"assigned_persona\": \"Focus on beginner-friendly setup, simple troubleshooting, fast onboarding, and clear non-technical explanations.\",\n    \"batch_index\": 3,\n    \"batch_position\": 10,\n    \"batch_size\": 10,\n    \"global_index\": 29,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"naiyun\",\n    \"domain\": \"naiyunfreevpn.com\",\n    \"brand_name_zh\": \"Naiyun 免费VPN\",\n    \"brand_name_en\": \"Naiyun Free VPN\",\n    \"assigned_persona\": \"Focus entirely on cross-platform compatibility, iOS and Android setup, and mobile app optimization.\",\n    \"batch_index\": 4,\n    \"batch_position\": 1,\n    \"batch_size\": 10,\n    \"global_index\": 30,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"shenlong\",\n    \"domain\": \"shenlongfreevpn.com\",\n    \"brand_name_zh\": \"Shenlong 免费VPN\",\n    \"brand_name_en\": \"Shenlong Free VPN\",\n    \"assigned_persona\": \"Focus heavily on secure protocols such as VLESS, Shadowsocks, Trojan, and premium IEPL/IPLC network lines.\",\n    \"batch_index\": 4,\n    \"batch_position\": 2,\n    \"batch_size\": 10,\n    \"global_index\": 31,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"paofu\",\n    \"domain\": \"paofufreevpn.com\",\n    \"brand_name_zh\": \"Paofu 免费VPN\",\n    \"brand_name_en\": \"Paofu Free VPN\",\n    \"assigned_persona\": \"Emphasize extreme price-to-performance ratio, transparent plan limits, and budget-friendly long-term use.\",\n    \"batch_index\": 4,\n    \"batch_position\": 3,\n    \"batch_size\": 10,\n    \"global_index\": 32,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"yangfanyun\",\n    \"domain\": \"yangfanyunfreevpn.org\",\n    \"brand_name_zh\": \"Yangfanyun 免费VPN\",\n    \"brand_name_en\": \"Yangfanyun Free VPN\",\n    \"assigned_persona\": \"Prioritize streaming unlock reliability for Netflix, Disney+, YouTube, Twitch, Amazon Prime Video, and regional media libraries.\",\n    \"batch_index\": 4,\n    \"batch_position\": 4,\n    \"batch_size\": 10,\n    \"global_index\": 33,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"shaoshupai\",\n    \"domain\": \"shaoshupaifreevpn.org\",\n    \"brand_name_zh\": \"Shaoshupai 免费VPN\",\n    \"brand_name_en\": \"Shaoshupai Free VPN\",\n    \"assigned_persona\": \"Prioritize low latency for gaming, voice calls, video meetings, and real-time collaboration workflows.\",\n    \"batch_index\": 4,\n    \"batch_position\": 5,\n    \"batch_size\": 10,\n    \"global_index\": 34,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"dgy\",\n    \"domain\": \"dgyfreevpn.com\",\n    \"brand_name_zh\": \"Dgy 免费VPN\",\n    \"brand_name_en\": \"Dgy Free VPN\",\n    \"assigned_persona\": \"Focus on privacy boundaries, no-log claims, account security, DNS leak awareness, and safe public Wi-Fi use.\",\n    \"batch_index\": 4,\n    \"batch_position\": 6,\n    \"batch_size\": 10,\n    \"global_index\": 35,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"totoro\",\n    \"domain\": \"totorofreevpn.com\",\n    \"brand_name_zh\": \"Totoro 免费VPN\",\n    \"brand_name_en\": \"Totoro Free VPN\",\n    \"assigned_persona\": \"Focus on router deployment, home network stability, smart TV access, and whole-house device coverage.\",\n    \"batch_index\": 4,\n    \"batch_position\": 7,\n    \"batch_size\": 10,\n    \"global_index\": 36,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"leiting\",\n    \"domain\": \"leitingfreevpn.com\",\n    \"brand_name_zh\": \"Leiting 免费VPN\",\n    \"brand_name_en\": \"Leiting Free VPN\",\n    \"assigned_persona\": \"Focus on travel, cross-border work, hotel and airport Wi-Fi, and backup connection planning.\",\n    \"batch_index\": 4,\n    \"batch_position\": 8,\n    \"batch_size\": 10,\n    \"global_index\": 37,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"sakuracat\",\n    \"domain\": \"sakuracatfreevpn.com\",\n    \"brand_name_zh\": \"Sakuracat 免费VPN\",\n    \"brand_name_en\": \"Sakuracat Free VPN\",\n    \"assigned_persona\": \"Focus on AI tools, developer workflows, code repositories, documentation sites, and research productivity.\",\n    \"batch_index\": 4,\n    \"batch_position\": 9,\n    \"batch_size\": 10,\n    \"global_index\": 38,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"milkcloud\",\n    \"domain\": \"milkcloudfreevpn.com\",\n    \"brand_name_zh\": \"Milkcloud 免费VPN\",\n    \"brand_name_en\": \"Milkcloud Free VPN\",\n    \"assigned_persona\": \"Focus on beginner-friendly setup, simple troubleshooting, fast onboarding, and clear non-technical explanations.\",\n    \"batch_index\": 4,\n    \"batch_position\": 10,\n    \"batch_size\": 10,\n    \"global_index\": 39,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"westdata\",\n    \"domain\": \"westdatafreevpn.com\",\n    \"brand_name_zh\": \"Westdata 免费VPN\",\n    \"brand_name_en\": \"Westdata Free VPN\",\n    \"assigned_persona\": \"Focus entirely on cross-platform compatibility, iOS and Android setup, and mobile app optimization.\",\n    \"batch_index\": 5,\n    \"batch_position\": 1,\n    \"batch_size\": 10,\n    \"global_index\": 40,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"xuanfeng\",\n    \"domain\": \"xuanfengfree.com\",\n    \"brand_name_zh\": \"Xuanfeng 免费VPN\",\n    \"brand_name_en\": \"Xuanfeng Free VPN\",\n    \"assigned_persona\": \"Focus heavily on secure protocols such as VLESS, Shadowsocks, Trojan, and premium IEPL/IPLC network lines.\",\n    \"batch_index\": 5,\n    \"batch_position\": 2,\n    \"batch_size\": 10,\n    \"global_index\": 41,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"waiwang\",\n    \"domain\": \"waiwangfree.com\",\n    \"brand_name_zh\": \"Waiwang 免费VPN\",\n    \"brand_name_en\": \"Waiwang Free VPN\",\n    \"assigned_persona\": \"Emphasize extreme price-to-performance ratio, transparent plan limits, and budget-friendly long-term use.\",\n    \"batch_index\": 5,\n    \"batch_position\": 3,\n    \"batch_size\": 10,\n    \"global_index\": 42,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"kutong\",\n    \"domain\": \"kutongfree.com\",\n    \"brand_name_zh\": \"Kutong 免费VPN\",\n    \"brand_name_en\": \"Kutong Free VPN\",\n    \"assigned_persona\": \"Prioritize streaming unlock reliability for Netflix, Disney+, YouTube, Twitch, Amazon Prime Video, and regional media libraries.\",\n    \"batch_index\": 5,\n    \"batch_position\": 4,\n    \"batch_size\": 10,\n    \"global_index\": 43,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"laowang\",\n    \"domain\": \"laowangfree.com\",\n    \"brand_name_zh\": \"Laowang 免费VPN\",\n    \"brand_name_en\": \"Laowang Free VPN\",\n    \"assigned_persona\": \"Prioritize low latency for gaming, voice calls, video meetings, and real-time collaboration workflows.\",\n    \"batch_index\": 5,\n    \"batch_position\": 5,\n    \"batch_size\": 10,\n    \"global_index\": 44,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"heidong\",\n    \"domain\": \"heidongfree.com\",\n    \"brand_name_zh\": \"Heidong 免费VPN\",\n    \"brand_name_en\": \"Heidong Free VPN\",\n    \"assigned_persona\": \"Focus on privacy boundaries, no-log claims, account security, DNS leak awareness, and safe public Wi-Fi use.\",\n    \"batch_index\": 5,\n    \"batch_position\": 6,\n    \"batch_size\": 10,\n    \"global_index\": 45,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"haiou\",\n    \"domain\": \"haioufree.com\",\n    \"brand_name_zh\": \"Haiou 免费VPN\",\n    \"brand_name_en\": \"Haiou Free VPN\",\n    \"assigned_persona\": \"Focus on router deployment, home network stability, smart TV access, and whole-house device coverage.\",\n    \"batch_index\": 5,\n    \"batch_position\": 7,\n    \"batch_size\": 10,\n    \"global_index\": 46,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"aox\",\n    \"domain\": \"aoxfree.com\",\n    \"brand_name_zh\": \"AOX 免费VPN\",\n    \"brand_name_en\": \"AOX Free VPN\",\n    \"assigned_persona\": \"Focus on travel, cross-border work, hotel and airport Wi-Fi, and backup connection planning.\",\n    \"batch_index\": 5,\n    \"batch_position\": 8,\n    \"batch_size\": 10,\n    \"global_index\": 47,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"aurora\",\n    \"domain\": \"aurorafree.com\",\n    \"brand_name_zh\": \"Aurora 免费VPN\",\n    \"brand_name_en\": \"Aurora Free VPN\",\n    \"assigned_persona\": \"Focus on AI tools, developer workflows, code repositories, documentation sites, and research productivity.\",\n    \"batch_index\": 5,\n    \"batch_position\": 9,\n    \"batch_size\": 10,\n    \"global_index\": 48,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"bluewhale\",\n    \"domain\": \"bluewhalefree.com\",\n    \"brand_name_zh\": \"Bluewhale 免费VPN\",\n    \"brand_name_en\": \"Bluewhale Free VPN\",\n    \"assigned_persona\": \"Focus on beginner-friendly setup, simple troubleshooting, fast onboarding, and clear non-technical explanations.\",\n    \"batch_index\": 5,\n    \"batch_position\": 10,\n    \"batch_size\": 10,\n    \"global_index\": 49,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"daishu\",\n    \"domain\": \"daishufree.com\",\n    \"brand_name_zh\": \"Daishu 免费VPN\",\n    \"brand_name_en\": \"Daishu Free VPN\",\n    \"assigned_persona\": \"Focus entirely on cross-platform compatibility, iOS and Android setup, and mobile app optimization.\",\n    \"batch_index\": 6,\n    \"batch_position\": 1,\n    \"batch_size\": 10,\n    \"global_index\": 50,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"feiji\",\n    \"domain\": \"feijifree.com\",\n    \"brand_name_zh\": \"Feiji 免费VPN\",\n    \"brand_name_en\": \"Feiji Free VPN\",\n    \"assigned_persona\": \"Focus heavily on secure protocols such as VLESS, Shadowsocks, Trojan, and premium IEPL/IPLC network lines.\",\n    \"batch_index\": 6,\n    \"batch_position\": 2,\n    \"batch_size\": 10,\n    \"global_index\": 51,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"feiyu\",\n    \"domain\": \"feiyufree.com\",\n    \"brand_name_zh\": \"Feiyu 免费VPN\",\n    \"brand_name_en\": \"Feiyu Free VPN\",\n    \"assigned_persona\": \"Emphasize extreme price-to-performance ratio, transparent plan limits, and budget-friendly long-term use.\",\n    \"batch_index\": 6,\n    \"batch_position\": 3,\n    \"batch_size\": 10,\n    \"global_index\": 52,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"fengniao\",\n    \"domain\": \"fengniaofree.com\",\n    \"brand_name_zh\": \"Fengniao 免费VPN\",\n    \"brand_name_en\": \"Fengniao Free VPN\",\n    \"assigned_persona\": \"Prioritize streaming unlock reliability for Netflix, Disney+, YouTube, Twitch, Amazon Prime Video, and regional media libraries.\",\n    \"batch_index\": 6,\n    \"batch_position\": 4,\n    \"batch_size\": 10,\n    \"global_index\": 53,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"galaxy\",\n    \"domain\": \"galaxyfree.org\",\n    \"brand_name_zh\": \"Galaxy 免费VPN\",\n    \"brand_name_en\": \"Galaxy Free VPN\",\n    \"assigned_persona\": \"Prioritize low latency for gaming, voice calls, video meetings, and real-time collaboration workflows.\",\n    \"batch_index\": 6,\n    \"batch_position\": 5,\n    \"batch_size\": 10,\n    \"global_index\": 54,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"gouji\",\n    \"domain\": \"goujifree.com\",\n    \"brand_name_zh\": \"Gouji 免费VPN\",\n    \"brand_name_en\": \"Gouji Free VPN\",\n    \"assigned_persona\": \"Focus on privacy boundaries, no-log claims, account security, DNS leak awareness, and safe public Wi-Fi use.\",\n    \"batch_index\": 6,\n    \"batch_position\": 6,\n    \"batch_size\": 10,\n    \"global_index\": 55,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"green\",\n    \"domain\": \"greenqkconnect.org\",\n    \"brand_name_zh\": \"Green Quick Connect\",\n    \"brand_name_en\": \"Green Quick Connect\",\n    \"assigned_persona\": \"Focus on router deployment, home network stability, smart TV access, and whole-house device coverage.\",\n    \"batch_index\": 6,\n    \"batch_position\": 7,\n    \"batch_size\": 10,\n    \"global_index\": 56,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"heimao\",\n    \"domain\": \"heimaofree.com\",\n    \"brand_name_zh\": \"Heimao 免费VPN\",\n    \"brand_name_en\": \"Heimao Free VPN\",\n    \"assigned_persona\": \"Focus on travel, cross-border work, hotel and airport Wi-Fi, and backup connection planning.\",\n    \"batch_index\": 6,\n    \"batch_position\": 8,\n    \"batch_size\": 10,\n    \"global_index\": 57,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"jianguo\",\n    \"domain\": \"jianguofree.com\",\n    \"brand_name_zh\": \"Jianguo 免费VPN\",\n    \"brand_name_en\": \"Jianguo Free VPN\",\n    \"assigned_persona\": \"Focus on AI tools, developer workflows, code repositories, documentation sites, and research productivity.\",\n    \"batch_index\": 6,\n    \"batch_position\": 9,\n    \"batch_size\": 10,\n    \"global_index\": 58,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"kuaimiao\",\n    \"domain\": \"kuaimiaofree.com\",\n    \"brand_name_zh\": \"Kuaimiao 免费VPN\",\n    \"brand_name_en\": \"Kuaimiao Free VPN\",\n    \"assigned_persona\": \"Focus on beginner-friendly setup, simple troubleshooting, fast onboarding, and clear non-technical explanations.\",\n    \"batch_index\": 6,\n    \"batch_position\": 10,\n    \"batch_size\": 10,\n    \"global_index\": 59,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"liebao\",\n    \"domain\": \"liebaofree.com\",\n    \"brand_name_zh\": \"Liebao 免费VPN\",\n    \"brand_name_en\": \"Liebao Free VPN\",\n    \"assigned_persona\": \"Focus entirely on cross-platform compatibility, iOS and Android setup, and mobile app optimization.\",\n    \"batch_index\": 7,\n    \"batch_position\": 1,\n    \"batch_size\": 10,\n    \"global_index\": 60,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"mayi\",\n    \"domain\": \"mayifree.org\",\n    \"brand_name_zh\": \"Mayi 免费VPN\",\n    \"brand_name_en\": \"Mayi Free VPN\",\n    \"assigned_persona\": \"Focus heavily on secure protocols such as VLESS, Shadowsocks, Trojan, and premium IEPL/IPLC network lines.\",\n    \"batch_index\": 7,\n    \"batch_position\": 2,\n    \"batch_size\": 10,\n    \"global_index\": 61,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"mifeng\",\n    \"domain\": \"mifengfree.com\",\n    \"brand_name_zh\": \"Mifeng 免费VPN\",\n    \"brand_name_en\": \"Mifeng Free VPN\",\n    \"assigned_persona\": \"Emphasize extreme price-to-performance ratio, transparent plan limits, and budget-friendly long-term use.\",\n    \"batch_index\": 7,\n    \"batch_position\": 3,\n    \"batch_size\": 10,\n    \"global_index\": 62,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"mogu\",\n    \"domain\": \"mogufree.com\",\n    \"brand_name_zh\": \"Mogu 免费VPN\",\n    \"brand_name_en\": \"Mogu Free VPN\",\n    \"assigned_persona\": \"Prioritize streaming unlock reliability for Netflix, Disney+, YouTube, Twitch, Amazon Prime Video, and regional media libraries.\",\n    \"batch_index\": 7,\n    \"batch_position\": 4,\n    \"batch_size\": 10,\n    \"global_index\": 63,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"panda\",\n    \"domain\": \"pandafree.org\",\n    \"brand_name_zh\": \"Panda 免费VPN\",\n    \"brand_name_en\": \"Panda Free VPN\",\n    \"assigned_persona\": \"Prioritize low latency for gaming, voice calls, video meetings, and real-time collaboration workflows.\",\n    \"batch_index\": 7,\n    \"batch_position\": 5,\n    \"batch_size\": 10,\n    \"global_index\": 64,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"qifei\",\n    \"domain\": \"qifeifree.com\",\n    \"brand_name_zh\": \"Qifei 免费VPN\",\n    \"brand_name_en\": \"Qifei Free VPN\",\n    \"assigned_persona\": \"Focus on privacy boundaries, no-log claims, account security, DNS leak awareness, and safe public Wi-Fi use.\",\n    \"batch_index\": 7,\n    \"batch_position\": 6,\n    \"batch_size\": 10,\n    \"global_index\": 65,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"rocket\",\n    \"domain\": \"rocketfree.org\",\n    \"brand_name_zh\": \"Rocket 免费VPN\",\n    \"brand_name_en\": \"Rocket Free VPN\",\n    \"assigned_persona\": \"Focus on router deployment, home network stability, smart TV access, and whole-house device coverage.\",\n    \"batch_index\": 7,\n    \"batch_position\": 7,\n    \"batch_size\": 10,\n    \"global_index\": 66,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"shandian\",\n    \"domain\": \"shandianfree.com\",\n    \"brand_name_zh\": \"Shandian 免费VPN\",\n    \"brand_name_en\": \"Shandian Free VPN\",\n    \"assigned_persona\": \"Focus on travel, cross-border work, hotel and airport Wi-Fi, and backup connection planning.\",\n    \"batch_index\": 7,\n    \"batch_position\": 8,\n    \"batch_size\": 10,\n    \"global_index\": 67,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"shendeng\",\n    \"domain\": \"shendengfree.com\",\n    \"brand_name_zh\": \"Shendeng 免费VPN\",\n    \"brand_name_en\": \"Shendeng Free VPN\",\n    \"assigned_persona\": \"Focus on AI tools, developer workflows, code repositories, documentation sites, and research productivity.\",\n    \"batch_index\": 7,\n    \"batch_position\": 9,\n    \"batch_size\": 10,\n    \"global_index\": 68,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"whale\",\n    \"domain\": \"whalefree.net\",\n    \"brand_name_zh\": \"Whale 免费VPN\",\n    \"brand_name_en\": \"Whale Free VPN\",\n    \"assigned_persona\": \"Focus on beginner-friendly setup, simple troubleshooting, fast onboarding, and clear non-technical explanations.\",\n    \"batch_index\": 7,\n    \"batch_position\": 10,\n    \"batch_size\": 10,\n    \"global_index\": 69,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"whitewhale\",\n    \"domain\": \"whitewhalefree.com\",\n    \"brand_name_zh\": \"Whitewhale 免费VPN\",\n    \"brand_name_en\": \"Whitewhale Free VPN\",\n    \"assigned_persona\": \"Focus entirely on cross-platform compatibility, iOS and Android setup, and mobile app optimization.\",\n    \"batch_index\": 8,\n    \"batch_position\": 1,\n    \"batch_size\": 10,\n    \"global_index\": 70,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"xiangjiao\",\n    \"domain\": \"xiangjiaofree.com\",\n    \"brand_name_zh\": \"Xiangjiao 免费VPN\",\n    \"brand_name_en\": \"Xiangjiao Free VPN\",\n    \"assigned_persona\": \"Focus heavily on secure protocols such as VLESS, Shadowsocks, Trojan, and premium IEPL/IPLC network lines.\",\n    \"batch_index\": 8,\n    \"batch_position\": 2,\n    \"batch_size\": 10,\n    \"global_index\": 71,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"xiaoha\",\n    \"domain\": \"xiaohafree.com\",\n    \"brand_name_zh\": \"Xiaoha 免费VPN\",\n    \"brand_name_en\": \"Xiaoha Free VPN\",\n    \"assigned_persona\": \"Emphasize extreme price-to-performance ratio, transparent plan limits, and budget-friendly long-term use.\",\n    \"batch_index\": 8,\n    \"batch_position\": 3,\n    \"batch_size\": 10,\n    \"global_index\": 72,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"xiyou\",\n    \"domain\": \"xiyoufree.com\",\n    \"brand_name_zh\": \"Xiyou 免费VPN\",\n    \"brand_name_en\": \"Xiyou Free VPN\",\n    \"assigned_persona\": \"Prioritize streaming unlock reliability for Netflix, Disney+, YouTube, Twitch, Amazon Prime Video, and regional media libraries.\",\n    \"batch_index\": 8,\n    \"batch_position\": 4,\n    \"batch_size\": 10,\n    \"global_index\": 73,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"fotiaoqiang\",\n    \"domain\": \"fotiaoqiangfree.com\",\n    \"brand_name_zh\": \"Fotiaoqiang 免费VPN\",\n    \"brand_name_en\": \"Fotiaoqiang Free VPN\",\n    \"assigned_persona\": \"Prioritize low latency for gaming, voice calls, video meetings, and real-time collaboration workflows.\",\n    \"batch_index\": 8,\n    \"batch_position\": 5,\n    \"batch_size\": 10,\n    \"global_index\": 74,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"firefly\",\n    \"domain\": \"fireflyfree.com\",\n    \"brand_name_zh\": \"Firefly 免费VPN\",\n    \"brand_name_en\": \"Firefly Free VPN\",\n    \"assigned_persona\": \"Focus on privacy boundaries, no-log claims, account security, DNS leak awareness, and safe public Wi-Fi use.\",\n    \"batch_index\": 8,\n    \"batch_position\": 6,\n    \"batch_size\": 10,\n    \"global_index\": 75,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"mango\",\n    \"domain\": \"mangofree.org\",\n    \"brand_name_zh\": \"Mango 免费VPN\",\n    \"brand_name_en\": \"Mango Free VPN\",\n    \"assigned_persona\": \"Focus on router deployment, home network stability, smart TV access, and whole-house device coverage.\",\n    \"batch_index\": 8,\n    \"batch_position\": 7,\n    \"batch_size\": 10,\n    \"global_index\": 76,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"dengta\",\n    \"domain\": \"dengtafree.com\",\n    \"brand_name_zh\": \"Dengta 免费VPN\",\n    \"brand_name_en\": \"Dengta Free VPN\",\n    \"assigned_persona\": \"Focus on travel, cross-border work, hotel and airport Wi-Fi, and backup connection planning.\",\n    \"batch_index\": 8,\n    \"batch_position\": 8,\n    \"batch_size\": 10,\n    \"global_index\": 77,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"hongxing\",\n    \"domain\": \"hongxingfree.com\",\n    \"brand_name_zh\": \"Hongxing 免费VPN\",\n    \"brand_name_en\": \"Hongxing Free VPN\",\n    \"assigned_persona\": \"Focus on AI tools, developer workflows, code repositories, documentation sites, and research productivity.\",\n    \"batch_index\": 8,\n    \"batch_position\": 9,\n    \"batch_size\": 10,\n    \"global_index\": 78,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"songshu\",\n    \"domain\": \"songshufree.com\",\n    \"brand_name_zh\": \"Songshu 免费VPN\",\n    \"brand_name_en\": \"Songshu Free VPN\",\n    \"assigned_persona\": \"Focus on beginner-friendly setup, simple troubleshooting, fast onboarding, and clear non-technical explanations.\",\n    \"batch_index\": 8,\n    \"batch_position\": 10,\n    \"batch_size\": 10,\n    \"global_index\": 79,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"apple\",\n    \"domain\": \"applefree.org\",\n    \"brand_name_zh\": \"Apple 免费VPN\",\n    \"brand_name_en\": \"Apple Free VPN\",\n    \"assigned_persona\": \"Focus entirely on cross-platform compatibility, iOS and Android setup, and mobile app optimization.\",\n    \"batch_index\": 9,\n    \"batch_position\": 1,\n    \"batch_size\": 10,\n    \"global_index\": 80,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"ios\",\n    \"domain\": \"iosfree.org\",\n    \"brand_name_zh\": \"iOS Free\",\n    \"brand_name_en\": \"iOS Free\",\n    \"assigned_persona\": \"Focus heavily on secure protocols such as VLESS, Shadowsocks, Trojan, and premium IEPL/IPLC network lines.\",\n    \"batch_index\": 9,\n    \"batch_position\": 2,\n    \"batch_size\": 10,\n    \"global_index\": 81,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"android\",\n    \"domain\": \"androidfree.org\",\n    \"brand_name_zh\": \"Android Free\",\n    \"brand_name_en\": \"Android Free\",\n    \"assigned_persona\": \"Emphasize extreme price-to-performance ratio, transparent plan limits, and budget-friendly long-term use.\",\n    \"batch_index\": 9,\n    \"batch_position\": 3,\n    \"batch_size\": 10,\n    \"global_index\": 82,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"windows\",\n    \"domain\": \"windowsfree.org\",\n    \"brand_name_zh\": \"Windows Free\",\n    \"brand_name_en\": \"Windows Free\",\n    \"assigned_persona\": \"Prioritize streaming unlock reliability for Netflix, Disney+, YouTube, Twitch, Amazon Prime Video, and regional media libraries.\",\n    \"batch_index\": 9,\n    \"batch_position\": 4,\n    \"batch_size\": 10,\n    \"global_index\": 83,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"mobile\",\n    \"domain\": \"mobilefree.net\",\n    \"brand_name_zh\": \"Mobile 免费VPN\",\n    \"brand_name_en\": \"Mobile Free VPN\",\n    \"assigned_persona\": \"Prioritize low latency for gaming, voice calls, video meetings, and real-time collaboration workflows.\",\n    \"batch_index\": 9,\n    \"batch_position\": 5,\n    \"batch_size\": 10,\n    \"global_index\": 84,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"ladder\",\n    \"domain\": \"ladderfree.org\",\n    \"brand_name_zh\": \"Ladder 免费VPN\",\n    \"brand_name_en\": \"Ladder Free VPN\",\n    \"assigned_persona\": \"Focus on privacy boundaries, no-log claims, account security, DNS leak awareness, and safe public Wi-Fi use.\",\n    \"batch_index\": 9,\n    \"batch_position\": 6,\n    \"batch_size\": 10,\n    \"global_index\": 85,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"heibao\",\n    \"domain\": \"heibaofree.com\",\n    \"brand_name_zh\": \"Heibao 免费VPN\",\n    \"brand_name_en\": \"Heibao Free VPN\",\n    \"assigned_persona\": \"Focus on router deployment, home network stability, smart TV access, and whole-house device coverage.\",\n    \"batch_index\": 9,\n    \"batch_position\": 7,\n    \"batch_size\": 10,\n    \"global_index\": 86,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"xiashi\",\n    \"domain\": \"xiashifree.com\",\n    \"brand_name_zh\": \"Xiashi 免费VPN\",\n    \"brand_name_en\": \"Xiashi Free VPN\",\n    \"assigned_persona\": \"Focus on travel, cross-border work, hotel and airport Wi-Fi, and backup connection planning.\",\n    \"batch_index\": 9,\n    \"batch_position\": 8,\n    \"batch_size\": 10,\n    \"global_index\": 87,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"yinghu\",\n    \"domain\": \"yinghufree.com\",\n    \"brand_name_zh\": \"Yinghu 免费VPN\",\n    \"brand_name_en\": \"Yinghu Free VPN\",\n    \"assigned_persona\": \"Focus on AI tools, developer workflows, code repositories, documentation sites, and research productivity.\",\n    \"batch_index\": 9,\n    \"batch_position\": 9,\n    \"batch_size\": 10,\n    \"global_index\": 88,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"daxiang\",\n    \"domain\": \"daxiangfree.com\",\n    \"brand_name_zh\": \"Daxiang 免费VPN\",\n    \"brand_name_en\": \"Daxiang Free VPN\",\n    \"assigned_persona\": \"Focus on beginner-friendly setup, simple troubleshooting, fast onboarding, and clear non-technical explanations.\",\n    \"batch_index\": 9,\n    \"batch_position\": 10,\n    \"batch_size\": 10,\n    \"global_index\": 89,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"haoyong\",\n    \"domain\": \"haoyongfree.com\",\n    \"brand_name_zh\": \"Haoyong 免费VPN\",\n    \"brand_name_en\": \"Haoyong Free VPN\",\n    \"assigned_persona\": \"Focus entirely on cross-platform compatibility, iOS and Android setup, and mobile app optimization.\",\n    \"batch_index\": 10,\n    \"batch_position\": 1,\n    \"batch_size\": 10,\n    \"global_index\": 90,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"git\",\n    \"domain\": \"gitfree.net\",\n    \"brand_name_zh\": \"Git Free\",\n    \"brand_name_en\": \"Git Free\",\n    \"assigned_persona\": \"Focus heavily on secure protocols such as VLESS, Shadowsocks, Trojan, and premium IEPL/IPLC network lines.\",\n    \"batch_index\": 10,\n    \"batch_position\": 2,\n    \"batch_size\": 10,\n    \"global_index\": 91,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"chatgpt\",\n    \"domain\": \"chatgptqkconnect.com\",\n    \"brand_name_zh\": \"ChatGPT 快连\",\n    \"brand_name_en\": \"ChatGPT Quick Connect\",\n    \"assigned_persona\": \"Emphasize extreme price-to-performance ratio, transparent plan limits, and budget-friendly long-term use.\",\n    \"batch_index\": 10,\n    \"batch_position\": 3,\n    \"batch_size\": 10,\n    \"global_index\": 92,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"origin\",\n    \"domain\": \"originfree.org\",\n    \"brand_name_zh\": \"Origin 免费VPN\",\n    \"brand_name_en\": \"Origin Free VPN\",\n    \"assigned_persona\": \"Prioritize streaming unlock reliability for Netflix, Disney+, YouTube, Twitch, Amazon Prime Video, and regional media libraries.\",\n    \"batch_index\": 10,\n    \"batch_position\": 4,\n    \"batch_size\": 10,\n    \"global_index\": 93,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"blizzard\",\n    \"domain\": \"blizzardfree.com\",\n    \"brand_name_zh\": \"Blizzard 免费VPN\",\n    \"brand_name_en\": \"Blizzard Free VPN\",\n    \"assigned_persona\": \"Prioritize low latency for gaming, voice calls, video meetings, and real-time collaboration workflows.\",\n    \"batch_index\": 10,\n    \"batch_position\": 5,\n    \"batch_size\": 10,\n    \"global_index\": 94,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"steam\",\n    \"domain\": \"steamfree.org\",\n    \"brand_name_zh\": \"Steam 免费VPN\",\n    \"brand_name_en\": \"Steam Free VPN\",\n    \"assigned_persona\": \"Focus on privacy boundaries, no-log claims, account security, DNS leak awareness, and safe public Wi-Fi use.\",\n    \"batch_index\": 10,\n    \"batch_position\": 6,\n    \"batch_size\": 10,\n    \"global_index\": 95,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"china\",\n    \"domain\": \"chinaqkconnect.com\",\n    \"brand_name_zh\": \"China Quick Connect\",\n    \"brand_name_en\": \"China Quick Connect\",\n    \"assigned_persona\": \"Focus on router deployment, home network stability, smart TV access, and whole-house device coverage.\",\n    \"batch_index\": 10,\n    \"batch_position\": 7,\n    \"batch_size\": 10,\n    \"global_index\": 96,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"quanqiu\",\n    \"domain\": \"quanqiufree.com\",\n    \"brand_name_zh\": \"Quanqiu 免费VPN\",\n    \"brand_name_en\": \"Quanqiu Free VPN\",\n    \"assigned_persona\": \"Focus on travel, cross-border work, hotel and airport Wi-Fi, and backup connection planning.\",\n    \"batch_index\": 10,\n    \"batch_position\": 8,\n    \"batch_size\": 10,\n    \"global_index\": 97,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"yilian\",\n    \"domain\": \"yilianfree.com\",\n    \"brand_name_zh\": \"Yilian 免费VPN\",\n    \"brand_name_en\": \"Yilian Free VPN\",\n    \"assigned_persona\": \"Focus on AI tools, developer workflows, code repositories, documentation sites, and research productivity.\",\n    \"batch_index\": 10,\n    \"batch_position\": 9,\n    \"batch_size\": 10,\n    \"global_index\": 98,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"anycast\",\n    \"domain\": \"anycastfree.com\",\n    \"brand_name_zh\": \"Anycast 免费VPN\",\n    \"brand_name_en\": \"Anycast Free VPN\",\n    \"assigned_persona\": \"Focus on beginner-friendly setup, simple troubleshooting, fast onboarding, and clear non-technical explanations.\",\n    \"batch_index\": 10,\n    \"batch_position\": 10,\n    \"batch_size\": 10,\n    \"global_index\": 99,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"biubiu\",\n    \"domain\": \"biubiufree.com\",\n    \"brand_name_zh\": \"Biubiu 免费VPN\",\n    \"brand_name_en\": \"Biubiu Free VPN\",\n    \"assigned_persona\": \"Focus entirely on cross-platform compatibility, iOS and Android setup, and mobile app optimization.\",\n    \"batch_index\": 11,\n    \"batch_position\": 1,\n    \"batch_size\": 10,\n    \"global_index\": 100,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"haitun\",\n    \"domain\": \"haitunfree.com\",\n    \"brand_name_zh\": \"Haitun 免费VPN\",\n    \"brand_name_en\": \"Haitun Free VPN\",\n    \"assigned_persona\": \"Focus heavily on secure protocols such as VLESS, Shadowsocks, Trojan, and premium IEPL/IPLC network lines.\",\n    \"batch_index\": 11,\n    \"batch_position\": 2,\n    \"batch_size\": 10,\n    \"global_index\": 101,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"jetstream\",\n    \"domain\": \"jetstreamfree.com\",\n    \"brand_name_zh\": \"Jetstream 免费VPN\",\n    \"brand_name_en\": \"Jetstream Free VPN\",\n    \"assigned_persona\": \"Emphasize extreme price-to-performance ratio, transparent plan limits, and budget-friendly long-term use.\",\n    \"batch_index\": 11,\n    \"batch_position\": 3,\n    \"batch_size\": 10,\n    \"global_index\": 102,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"xiaopang\",\n    \"domain\": \"xiaopangfree.com\",\n    \"brand_name_zh\": \"Xiaopang 免费VPN\",\n    \"brand_name_en\": \"Xiaopang Free VPN\",\n    \"assigned_persona\": \"Prioritize streaming unlock reliability for Netflix, Disney+, YouTube, Twitch, Amazon Prime Video, and regional media libraries.\",\n    \"batch_index\": 11,\n    \"batch_position\": 4,\n    \"batch_size\": 10,\n    \"global_index\": 103,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"feiniao\",\n    \"domain\": \"feiniaofree.com\",\n    \"brand_name_zh\": \"Feiniao 免费VPN\",\n    \"brand_name_en\": \"Feiniao Free VPN\",\n    \"assigned_persona\": \"Prioritize low latency for gaming, voice calls, video meetings, and real-time collaboration workflows.\",\n    \"batch_index\": 11,\n    \"batch_position\": 5,\n    \"batch_size\": 10,\n    \"global_index\": 104,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"tag\",\n    \"domain\": \"tagqkconnect.com\",\n    \"brand_name_zh\": \"TAG Quick Connect\",\n    \"brand_name_en\": \"TAG Quick Connect\",\n    \"assigned_persona\": \"Focus on privacy boundaries, no-log claims, account security, DNS leak awareness, and safe public Wi-Fi use.\",\n    \"batch_index\": 11,\n    \"batch_position\": 6,\n    \"batch_size\": 10,\n    \"global_index\": 105,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"glados\",\n    \"domain\": \"gladosfree.com\",\n    \"brand_name_zh\": \"GLaDOS 免费VPN\",\n    \"brand_name_en\": \"GLaDOS Free VPN\",\n    \"assigned_persona\": \"Focus on router deployment, home network stability, smart TV access, and whole-house device coverage.\",\n    \"batch_index\": 11,\n    \"batch_position\": 7,\n    \"batch_size\": 10,\n    \"global_index\": 106,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"ssrdog\",\n    \"domain\": \"ssrdogfree.com\",\n    \"brand_name_zh\": \"SSRDOG 免费VPN\",\n    \"brand_name_en\": \"SSRDOG Free VPN\",\n    \"assigned_persona\": \"Focus on travel, cross-border work, hotel and airport Wi-Fi, and backup connection planning.\",\n    \"batch_index\": 11,\n    \"batch_position\": 8,\n    \"batch_size\": 10,\n    \"global_index\": 107,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"speedcat\",\n    \"domain\": \"speedcatfree.com\",\n    \"brand_name_zh\": \"Speedcat 免费VPN\",\n    \"brand_name_en\": \"Speedcat Free VPN\",\n    \"assigned_persona\": \"Focus on AI tools, developer workflows, code repositories, documentation sites, and research productivity.\",\n    \"batch_index\": 11,\n    \"batch_position\": 9,\n    \"batch_size\": 10,\n    \"global_index\": 108,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"suyunti\",\n    \"domain\": \"suyuntifree.com\",\n    \"brand_name_zh\": \"Suyunti 免费VPN\",\n    \"brand_name_en\": \"Suyunti Free VPN\",\n    \"assigned_persona\": \"Focus on beginner-friendly setup, simple troubleshooting, fast onboarding, and clear non-technical explanations.\",\n    \"batch_index\": 11,\n    \"batch_position\": 10,\n    \"batch_size\": 10,\n    \"global_index\": 109,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"geph\",\n    \"domain\": \"gephfree.com\",\n    \"brand_name_zh\": \"Geph 免费VPN\",\n    \"brand_name_en\": \"Geph Free VPN\",\n    \"assigned_persona\": \"Focus entirely on cross-platform compatibility, iOS and Android setup, and mobile app optimization.\",\n    \"batch_index\": 12,\n    \"batch_position\": 1,\n    \"batch_size\": 10,\n    \"global_index\": 110,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"malus\",\n    \"domain\": \"malusfree.com\",\n    \"brand_name_zh\": \"Malus 免费VPN\",\n    \"brand_name_en\": \"Malus Free VPN\",\n    \"assigned_persona\": \"Focus heavily on secure protocols such as VLESS, Shadowsocks, Trojan, and premium IEPL/IPLC network lines.\",\n    \"batch_index\": 12,\n    \"batch_position\": 2,\n    \"batch_size\": 10,\n    \"global_index\": 111,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"lantern\",\n    \"domain\": \"lanternfree.com\",\n    \"brand_name_zh\": \"Lantern 免费VPN\",\n    \"brand_name_en\": \"Lantern Free VPN\",\n    \"assigned_persona\": \"Emphasize extreme price-to-performance ratio, transparent plan limits, and budget-friendly long-term use.\",\n    \"batch_index\": 12,\n    \"batch_position\": 3,\n    \"batch_size\": 10,\n    \"global_index\": 112,\n    \"portfolio_total\": 114\n  },\n  {\n    \"source\": \"transocks\",\n    \"domain\": \"transocksfree.com\",\n    \"brand_name_zh\": \"Transocks 免费VPN\",\n    \"brand_name_en\": \"Transocks Free VPN\",\n    \"assigned_persona\": \"Prioritize streaming unlock reliability for Netflix, Disney+, YouTube, Twitch, Amazon Prime Video, and regional media libraries.\",\n    \"batch_index\": 12,\n    \"batch_position\": 4,\n    \"batch_size\": 10,\n    \"global_index\": 113,\n    \"portfolio_total\": 114\n  }\n];\n\nreturn portfolio.map((site) => ({ json: site }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1580,
+        112
+      ],
+      "id": "9d8b6d77-3de1-4c0c-8c04-c1726a8af3b1",
+      "name": "Define Portfolio Domains & Personas"
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://r.jina.ai/' + (($json.website || '').replace(/\\/$/, '')) + '/pricing' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "text/markdown"
+            },
+            {
+              "name": "X-Return-Format",
+              "value": "markdown"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -240,
+        112
+      ],
+      "id": "80dbaf1e-8f13-46e4-bd85-33fe21781f22",
+      "name": "Fetch Competitor Clean Text",
+      "retryOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a strict competitor-spec extraction utility for a VPN SEO workflow.\n\nParse the scraped markdown from Jina Reader and return ONLY a valid JSON object. Do not wrap it in markdown. Do not add explanations.\n\nRequired JSON shape:\n{\n  \"pricing\": \"Extracted monthly/yearly structure, or 'Not disclosed' if unavailable\",\n  \"protocols\": \"List of discovered protocols, or 'Not disclosed' if unavailable\",\n  \"server_count\": \"Total servers or locations, or 'Not disclosed' if unavailable\"\n}\n\nCompetitor: {{ $('Loop Over Domain Batches').item.json.provider }}\nWebsite: {{ $('Loop Over Domain Batches').item.json.website }}\n\nScraped markdown:\n{{ ($json.data || $json.body || $json.text || JSON.stringify($json)).slice(0, 20000) }}",
+        "options": {
+          "systemMessage": "=Extract only facts visible in the supplied scraped markdown. Return strict JSON only. Todays date is {{ $now }}",
+          "maxIterations": 3
+        }
+      },
+      "id": "2f9b3551-1c23-4ab2-8c47-4154939ef292",
+      "name": "Extract Competitor Specs JSON",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        0,
+        112
+      ],
+      "retryOnFail": true,
+      "typeVersion": 1.7
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.4-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-5.4-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "responseFormat": "json_object"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        304
+      ],
+      "id": "7246cd90-934e-4efd-8703-c8097b315218",
+      "name": "OpenAI Chat Model - Specs",
+      "credentials": {
+        "openAiApi": {
+          "id": "CInkHwqc8N6ckM83",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function escapeHtml(value) {\n  return String(value || '')\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;')\n    .replace(/\"/g, '&quot;')\n    .replace(/'/g, '&#39;');\n}\n\nfunction contentToHtml(content) {\n  const blocks = String(content || '')\n    .replace(/\\r\\n/g, '\\n')\n    .split(/\\n{2,}/)\n    .map((block) => block.trim())\n    .filter(Boolean);\n\n  return blocks\n    .map((block) => '<p>' + escapeHtml(block).replace(/\\n/g, '<br>') + '</p>')\n    .join('');\n}\n\nfunction excerptFromContent(content) {\n  return String(content || '')\n    .replace(/\\s+/g, ' ')\n    .trim()\n    .slice(0, 180);\n}\n\nreturn $input.all().map((item) => {\n  const data = item.json;\n  const now = new Date().toISOString();\n  const slug = String(data.slug || '').trim();\n  const domain = String(data.domain || '').trim();\n\n  if (!domain) throw new Error('Cannot create GitHub file without domain.');\n  if (!slug) throw new Error('Cannot create GitHub file without slug.');\n\n  const postPayload = {\n    slug,\n    title: data.title || '',\n    excerpt: data.excerpt || excerptFromContent(data.content),\n    publishedAt: data.publishedAt || now,\n    updatedAt: now,\n    contentHtml: contentToHtml(data.content),\n    metadata: {\n      domain,\n      brand_name_zh: data.brand_name_zh || '',\n      brand_name_en: data.brand_name_en || '',\n      assigned_persona: data.assigned_persona || '',\n      competitor_name: data.provider || data.competitor_name || '',\n      competitor_website: data.website || data.competitor_website || '',\n      pricing: data.pricing || '',\n      protocols: data.protocols || '',\n      server_count: data.server_count || '',\n      keywords: data.keywords || [],\n      batch_index: data.batch_index,\n      batch_position: data.batch_position\n    }\n  };\n\n  return {\n    json: {\n      ...data,\n      githubFilePath: 'sites/' + domain + '/posts/' + slug + '.json',\n      githubFileContent: JSON.stringify(postPayload, null, 2),\n      githubCommitMessage: 'Add blog post ' + domain + '/' + slug\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1160,
+        112
+      ],
+      "id": "f74eab78-9413-4481-9ded-7771f430070e",
+      "name": "Build GitHub File Payload"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// Jina Reader's unauthenticated limit is 20 requests per minute.\n// The workflow processes 10 domains per batch, then waits 60 seconds before\n// requesting the next batch, keeping usage comfortably below that ceiling.\nawait new Promise((resolve) => setTimeout(resolve, 60000));\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        112
+      ],
+      "id": "a8bbf23e-d13a-4b7c-98c1-c1e6106fc2fe",
+      "name": "Respect Jina 20 RPM Limit"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Define Portfolio Domains & Personas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Define Portfolio Domains & Personas": {
+      "main": [
+        [
+          {
+            "node": "Get google keywords to generate post1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get google keywords to generate post1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Get all VPN providers1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get all VPN providers1": {
+      "main": [
+        [
+          {
+            "node": "Assign Competitor Per Domain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assign Competitor Per Domain": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Domain Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Domain Batches": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Fetch Competitor Clean Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Competitor Clean Text": {
+      "main": [
+        [
+          {
+            "node": "Extract Competitor Specs JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Competitor Specs JSON": {
+      "main": [
+        [
+          {
+            "node": "Prepare Article Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Article Context": {
+      "main": [
+        [
+          {
+            "node": "Dynamic Multi-Brand Content Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dynamic Multi-Brand Content Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "Build GitHub File Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build GitHub File Payload": {
+      "main": [
+        [
+          {
+            "node": "Create Blog File in GitHub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Blog File in GitHub": {
+      "main": [
+        [
+          {
+            "node": "Respect Jina 20 RPM Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respect Jina 20 RPM Limit": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Domain Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Dynamic Multi-Brand Content Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model - Specs": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Extract Competitor Specs JSON",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "multi-site-content-engine-v3-github-rate-limited",
+  "meta": {
+    "instanceId": "d48a16eb840fdb1d1239bf90175c1ae117069ad5fdadcffeed621d80d3f42a7a",
+    "templateCredsSetupCompleted": true
+  },
+  "id": "SSgXygc5q2uFN0rT",
+  "tags": []
+}
