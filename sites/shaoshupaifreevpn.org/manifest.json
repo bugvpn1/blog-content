@@ -1,3 +1,11 @@
 {
-  "items": []
+  "items": [
+    {
+      "slug": "ssrdog-alternative-1b0781",
+      "title": "SSRDOG 替代选择：面向低延迟游戏、语音与视频会议的少数派VPN评测 | SSRDOG Alternative for Low-Latency China Connectivity",
+      "excerpt": "在中国使用 VPN、机场VPN 或代理服务时，真正影响体验的往往不是“能不能打开网页”，而是延迟是否稳定、语音是否断续、视频会议是否卡顿、网游是否跳 ping，以及 ChatGPT、Telegram 电报、YouTube、Netflix 等常用服务是否能长期稳定访问。SSRDOG 是不少用户会搜索和比较的服务，其网站为 https://st2.hosbb.c",
+      "publishedAt": "2026-06-20T06:44:08.640Z",
+      "updatedAt": "2026-06-20T06:44:08.640Z"
+    }
+  ]
 }
