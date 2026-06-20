@@ -1,8 +1,0 @@
-{
-    "slug":  "mobile-wifi-vpn-speed-differences",
-    "title":  "移动网络和 Wi-Fi 下的 VPN 速度差异",
-    "excerpt":  "比较手机蜂窝网络与 Wi-Fi 使用 VPN 时的速度、稳定性和断连原因。",
-    "publishedAt":  "2026-06-06T04:15:00.000Z",
-    "updatedAt":  "2026-06-08T12:00:00.000Z",
-    "contentHtml":  "\u003ch2\u003e网络质量不同\u003c/h2\u003e\u003cp\u003eWi-Fi 和蜂窝网络的路由、信号和限制不同，同一 VPN 节点可能表现差异很大。测试时要分别记录两种网络下的体验。\u003c/p\u003e\u003ch2\u003eWi-Fi 认证影响\u003c/h2\u003e\u003cp\u003e公共 Wi-Fi 常有认证页面，未完成认证前 VPN 可能无法连接。先打开普通网页确认联网，再启动 VPN。\u003c/p\u003e\u003ch2\u003e蜂窝信号波动\u003c/h2\u003e\u003cp\u003e移动网络在电梯、地下室或高速移动中容易波动。VPN 可能因此重连，表现为短暂掉线或应用刷新失败。\u003c/p\u003e\u003ch2\u003e选择适合的线路\u003c/h2\u003e\u003cp\u003e如果经常在手机上使用 VPN，可以分别保存适合 Wi-Fi 和蜂窝网络的节点。\u003c/p\u003e"
-}
