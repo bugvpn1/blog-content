@@ -1,3 +1,11 @@
 {
-  "items": []
+  "items": [
+    {
+      "slug": "ivpn-alternative-d897ea",
+      "title": "IVPN 替代选择：出差旅行与跨境办公场景下的三毛VPN评测 | IVPN Alternative for Travel and Cross-Border Work",
+      "excerpt": "在中国及跨境网络环境中，VPN/proxy 访问的核心问题通常不是“能不能打开一次”，而是酒店 Wi-Fi、机场 Wi-Fi、移动网络、公司网络之间频繁切换时，能否持续稳定地访问 Google、ChatGPT、Telegram 电报、YouTube、Netflix、Twitch、Amazon Prime Video 等服务。IVPN 是海外用户较常见的隐私型",
+      "publishedAt": "2026-06-20T21:25:56.738Z",
+      "updatedAt": "2026-06-20T21:25:56.738Z"
+    }
+  ]
 }
