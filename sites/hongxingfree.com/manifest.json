@@ -1,3 +1,11 @@
 {
-  "items": []
+  "items": [
+    {
+      "slug": "tunnelbear-alternative-3f0029",
+      "title": "中国开发者与 AI 用户如何选择 TunnelBear 替代方案 | TunnelBear Alternative for China AI and Developer Workflows",
+      "excerpt": "在中国大陆的 VPN/proxy 访问环境里，用户真正关心的往往不是“能不能下载一个 VPN”，而是能否长期稳定访问 ChatGPT、Claude、Gemini、GitHub、Docker 文档、npm/PyPI、Stack Overflow、Google Scholar、YouTube 教程、Netflix 或 Twitch 等服务。TunnelBear ",
+      "publishedAt": "2026-06-20T08:18:34.538Z",
+      "updatedAt": "2026-06-20T08:18:34.538Z"
+    }
+  ]
 }
