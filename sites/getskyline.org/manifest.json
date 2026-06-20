@@ -1,3 +1,11 @@
 {
-  "items": []
+  "items": [
+    {
+      "slug": "private-internet-access-alternative-63ba90",
+      "title": "Private Internet Access 替代选择：面向 AI、开发者与科研工作流的中国连接方案 | Private Internet Access Alternative for AI, Developers and Research Workflows",
+      "excerpt": "在中国使用 VPN、机场VPN 或代理服务时，真正影响体验的往往不是单一网页能否打开，而是 ChatGPT、豆包、GitHub、GitLab、Docker 文档、npm、PyPI、Hugging Face、arXiv、Google Scholar、YouTube 教程、Twitch 直播和跨区流媒体是否能长期稳定访问。Private Internet Acc",
+      "publishedAt": "2026-06-20T21:06:42.418Z",
+      "updatedAt": "2026-06-20T21:06:42.418Z"
+    }
+  ]
 }
