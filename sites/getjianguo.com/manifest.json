@@ -1,3 +1,11 @@
 {
-  "items": []
+  "items": [
+    {
+      "slug": "jlu-vpn-alternative-31a25b",
+      "title": "吉林大学VPN替代方案：面向中国连接的高速协议与IEPL/IPLC线路选择 | Jilin University VPN Alternative for China Connectivity",
+      "excerpt": "在中国大陆的跨境访问环境中，用户最关心的通常不是单一的“能不能连上”，而是长期使用时的速度、稳定性、协议兼容性、流媒体解锁能力，以及在手机、电脑、路由器或 Shadowrocket 等客户端上的实际体验。吉林大学VPN，官网为 https://vpn.jlu.edu.cn，主要面向吉林大学相关用户的校园网络与校内资源访问场景。对于需要访问学术资源的师生来说，",
+      "publishedAt": "2026-06-20T22:37:42.077Z",
+      "updatedAt": "2026-06-20T22:37:42.077Z"
+    }
+  ]
 }
