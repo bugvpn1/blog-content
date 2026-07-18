@@ -13,6 +13,13 @@
       "excerpt": "在中国大陆，跨境访问环境对 VPN、机场vpn、vpn机场和代理工具的稳定性要求越来越高。无论是使用 ChatGPT、豆包、GitHub、Docker、npm、PyPI、Google Scholar、英文技术文档，还是观看 YouTube、Netflix、Twitch，用户最关心的已经不只是能否连接，而是能否长期稳定、低延迟、少中断地完成工作流。IPVani",
       "publishedAt": "2026-06-20T19:18:36.865Z",
       "updatedAt": "2026-06-20T19:18:36.865Z"
+    },
+    {
+      "slug": "mullvad-vpn-alternative-ae3224",
+      "title": "Mullvad VPN 替代选择：面向 AI、开发者与科研用户的中国访问方案 | Mullvad VPN Alternative for China, AI and Developer Workflows",
+      "excerpt": "在中国使用 AI 工具、代码仓库、英文文档、学术资料和海外协作平台时，稳定的跨境访问往往比单纯“能打开网页”更重要。很多用户会搜索 Mullvad VPN、访问 https://mullvad.net，并把它作为注重隐私的 VPN 选项来评估；但如果你的核心需求是 ChatGPT、豆包相关海外资料检索、GitHub、开发文档、Docker/VMware 资料",
+      "publishedAt": "2026-07-18T07:27:52.959Z",
+      "updatedAt": "2026-07-18T07:27:52.959Z"
     }
   ]
 }
