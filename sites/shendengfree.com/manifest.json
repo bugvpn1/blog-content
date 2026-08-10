@@ -20,6 +20,13 @@
       "excerpt": "在中国进行跨境访问时，很多用户的需求已经不只是“能打开网页”，而是要稳定使用 ChatGPT、豆包国际相关资源、GitHub、GitLab、Docker 文档、npm、PyPI、Hugging Face、arXiv、Google Scholar、YouTube 教程、Twitch 技术直播，以及各种开发者文档站点。Astrill VPN 是不少用户会搜索和比",
       "publishedAt": "2026-07-18T07:07:17.681Z",
       "updatedAt": "2026-07-18T07:07:17.681Z"
+    },
+    {
+      "slug": "mullvad-vpn-alternative-dd1fa9",
+      "title": "Mullvad VPN 替代方案：适合中国 AI 与开发工作流的连接选择 | Mullvad VPN Alternative for AI and Developer Workflows",
+      "excerpt": "在中国使用跨境网络服务时，连接速度并不是唯一标准。对于需要访问 ChatGPT、豆包相关资源、代码仓库、开发文档、AI API、学术资料以及 Telegram 电报的用户，线路稳定性、兼容性和长时间会话表现往往更加重要。Mullvad VPN（https://mullvad.net）是用户经常比较的服务之一，但考虑到中国网络环境的特殊性，以及流媒体、开发工具",
+      "publishedAt": "2026-08-10T03:30:27.390Z",
+      "updatedAt": "2026-08-10T03:30:27.390Z"
     }
   ]
 }
