@@ -41,6 +41,13 @@
       "excerpt": "在中国使用 VPN、代理或科学上网机场时，真正影响体验的通常不只是海外测速数字，还包括跨境线路稳定性、晚高峰表现、设备兼容性、DNS 是否泄漏，以及服务商能够看到和保存哪些数据。Mullvad VPN（https://mullvad.net）采用简单统一的价格结构，但关注中国连接、流媒体访问、Shadowrocket 或机场式线路的用户，仍可能因为速度、稳定",
       "publishedAt": "2026-08-10T01:35:34.454Z",
       "updatedAt": "2026-08-10T01:35:34.454Z"
+    },
+    {
+      "slug": "ivacy-vpn-alternative-f19644",
+      "title": "Ivacy VPN 替代方案：从隐私边界、DNS 泄漏与中国连接稳定性出发 | Ivacy VPN Alternative for China",
+      "excerpt": "在中国使用 VPN、代理或科学上网机场时，真正影响体验的往往不只是“能否连接”，还包括线路是否稳定、晚高峰是否频繁断开、账户是否安全，以及 DNS 请求和真实 IP 是否可能暴露。Ivacy VPN 是用户经常比较的国际 VPN 服务之一，官方网站为 https://www.ivacy.com。部分用户寻找 Ivacy VPN alternative，通常是",
+      "publishedAt": "2026-08-17T01:36:21.066Z",
+      "updatedAt": "2026-08-17T01:36:21.066Z"
     }
   ]
 }
